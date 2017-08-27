@@ -1,0 +1,4 @@
+bpython==0.16
+Sphinx==1.6.3
+sphinxcontrib-websupport==1.0.1
+pytest==3.2.1

@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+import sys, os
+try:
+	from ultimate_guitar.command_line import cli
+except Exception as ex:
+	sys.path.insert(0, os.path.abspath('/Users/victor/code_public/python-ultimate-guitar/'))
+	from ultimate_guitar.command_line import cli
+
+if __name__ == '__main__':
+    cli()
