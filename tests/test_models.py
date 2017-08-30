@@ -20,6 +20,7 @@ def test_resultset(resultset):
 def test_result_behavior(resultset):
 	first = resultset.results[0]
 	assert first.rating == first['rating']
+	assert first.artist.name == first['artist']['name']
 
 
 def test_result_content(resultset):
@@ -27,10 +28,10 @@ def test_result_content(resultset):
 	first = results[0]
 
 	assert first.rating == 269
-	assert first.artist_link == '/tabs/radiohead_tabs.htm'
+	assert first.artist.link == 'https://www.ultimate-guitar.com/tabs/radiohead_tabs.htm'
 	assert first.title == 'Paranoid Android (ver5)'
-	assert first.artist_name == 'Radiohead'
+	assert first.artist.name == 'Radiohead'
 	assert first.link == 'https://tabs.ultimate-guitar.com/r/radiohead/paranoid_android_ver5_tab.htm'
-	assert first.result_type == 'TAB'
+	assert first.format_code == 'TAB'
 
 

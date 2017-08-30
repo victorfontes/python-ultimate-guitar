@@ -1,0 +1,2 @@
+- http://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
+- https://readthedocs.org/

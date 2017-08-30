@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 
 class UGTypes:
     """
+    TODO: Refactor urgente
     Helper to handle Ultimate Guitar's result types. 
     The value of a type is a tuple with html class and querystring param value
 
@@ -37,23 +38,38 @@ class UGTypes:
     power =  UGType('power','PWR', 600)
     drums = UGType('drums','DRM', 700)
     
-
+    UGTYPES = [dict(name='tab',code= 'TAB', uid=200), dict(name='ukulele',code= 'UKU', uid=800), dict(name='video',code='VID', uid=100), dict(name='chords',code='CRD', uid=300), dict(name='bass',code='BASS', uid=400), dict(name='guitar_pro',code='PRO', uid=500), dict(name='power',code='PWR', uid=600), dict(name='drums',code='DRM', uid=700)]
     ADVERTISING_TYPES = ('TAB PRO', 'CRD PRO')
     
     @classmethod
     def get(cls, name):
         return getattr(cls, name, None)
-    
 
-class SearchResult(dict):
+    @classmethod
+    def get_by_code(cls, code):
+        return filter(lambda x: x['code'] == code, cls.UGTYPES)[0]
+
+    
+class AttrDict(dict):
+    def __getattr__(self, attr):
+        try:
+            return self.__getitem__(attr)
+        except:
+            return self.__getattribute__(attr)
+
+
+class SearchResult(AttrDict):
+    """ Its a song search result
+    TODO: rename the class
+    """
     def __init__(self, **kwargs):
-        dict.__init__(self)
-        self['title'] = kwargs.get('title', '')
-        self['link'] = kwargs.get('link', '')
-        self['artist_name'] = kwargs.get('artist_name', '')
-        self['artist_link'] = kwargs.get('artist_link', '')
-        self['result_type'] = kwargs.get('result_type', '') 
-        self['rating'] = kwargs.get('rating', 0)
+        dict.__init__(self, **kwargs)
+        #self['title'] = kwargs.get('title', '')
+        #self['link'] = kwargs.get('link', '')
+        #self['artist_name'] = kwargs.get('artist_name', '')
+        #self['artist_link'] = kwargs.get('artist_link', '')
+        #self['result_type'] = kwargs.get('result_type', '') 
+        #self['rating'] = kwargs.get('rating', 0)
 
     def __getattr__(self, attr):
         try:
@@ -63,23 +79,28 @@ class SearchResult(dict):
 
     @classmethod
     def parse(cls, article_soup):
-        data = dict()
+        song = AttrDict()
 
         song_tag = article_soup.findAll('a')[0]
-        data['title'] = parse_text_from_tag(song_tag)
-        data['link'] = song_tag.get('href')
-
-        artist_tag = article_soup.findAll('a')[1]       
-        data['artist_name'] = parse_text_from_tag(artist_tag)
-        data['artist_link'] = artist_tag.get('href')
+        song['title'] = parse_text_from_tag(song_tag)
+        song['link'] = song_tag.get('href')
 
         type_tag = find_tag_and_class(article_soup, 'div', 'ugm-list--type')
-        data['result_type'] = parse_text_from_tag(type_tag)
-
+        song['format_code'] = parse_text_from_tag(type_tag)
+        if song['format_code'] not in UGTypes.ADVERTISING_TYPES:
+            song['format'] = UGTypes.get_by_code(song['format_code'])['name']
+        
         rating_tag = find_tag_and_class(article_soup, 'span', 'ig-list--rating')
-        data['rating'] = int(parse_text_from_tag(rating_tag, '-1'))
+        song['rating'] = int(parse_text_from_tag(rating_tag, '-1'))
 
-        return SearchResult(**data)
+        artist_tag = article_soup.findAll('a')[1]       
+        artist = AttrDict()
+        artist['name'] = parse_text_from_tag(artist_tag)
+        artist['link'] = 'https://www.ultimate-guitar.com' + artist_tag.get('href')
+        song['artist'] = artist
+
+
+        return SearchResult(**song)
 
 
 class ResultSet(object):
@@ -113,7 +134,7 @@ class ResultSet(object):
 
 
         results = map(SearchResult.parse, articles)
-        results = filter(lambda x: x.result_type not in UGTypes.ADVERTISING_TYPES, results)
+        results = filter(lambda x: x['format_code'] not in UGTypes.ADVERTISING_TYPES, results)
         results = sorted(results, key=lambda x: x.rating, reverse=True)
 
         return cls(query, results_found, results, pagination)
