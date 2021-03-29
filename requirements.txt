@@ -15,7 +15,7 @@ imagesize==0.7.1
 Jinja2==2.9.6
 lxml==3.8.0
 MarkupSafe==1.0
-Pygments==2.2.0
+Pygments==2.7.4
 python-ultimate-guitar==0.1.0
 pytz==2017.2
 requests==2.18.4
